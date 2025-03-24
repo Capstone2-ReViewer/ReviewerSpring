@@ -1,4 +1,4 @@
-package domain;
+package com.example.reviewerspring.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
