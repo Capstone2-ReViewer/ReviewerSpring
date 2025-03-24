@@ -9,7 +9,6 @@ public class ReviewerSpringApplication {
 	public static void main(String[] args) {
 
 		SpringApplication.run(ReviewerSpringApplication.class, args);
-		int a = 1;
 	}
 
 }
