@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class GameInfoAPI {
 
-    private final GameService gameService;
+    //private final GameService gameService;
 
 
 }

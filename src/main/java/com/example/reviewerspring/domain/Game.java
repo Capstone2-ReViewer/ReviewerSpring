@@ -1,25 +1,39 @@
 package com.example.reviewerspring.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Setter
-@Getter
+@Table(name = "GAME_TB")
+@Getter @Setter
 public class Game {
     @Id
-    @GeneratedValue()
-    @Column(name="GAME_PK")
-    private int gamePK;
+    @Column(name = "GAME_PK")
+    private Integer id;
+//  웹 크롤링한다고 했지않나?
+//    private String title;
+//    private String poster;
+//    private String synopsis;
+//    private String genre;
+//    private String dev;
+//    private String publisher;
 
-    private String gameName;
-    private double score;
-    private LocalDateTime updateTime;
+    @Column(name = "launch_date")
+    private String launchDate;
 
+    @OneToOne(mappedBy = "game")
+    private GameScore score;
+
+    @OneToOne(mappedBy = "game")
+    private Playtime playtime;
+
+    @OneToOne(mappedBy = "game")
+    private Update update;
+
+    @OneToMany(mappedBy = "game")
+    private List<GameTag> tags;
 }
