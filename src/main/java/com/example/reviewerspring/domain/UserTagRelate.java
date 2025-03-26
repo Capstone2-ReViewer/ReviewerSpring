@@ -24,7 +24,6 @@ public class UserTagRelate implements Serializable {
     @ManyToOne
     @JoinColumn(name = "USER_PK", insertable = false, updatable = false)
     private User user;
-    int a;
 
     @ManyToOne
     @JoinColumn(name = "TAG_PK", insertable = false, updatable = false)
