@@ -39,6 +39,18 @@ public class UserController {
     public ResponseEntity<List<UserTagRelate>> getTagRelateData(@PathVariable Integer userPk) {
         return ResponseEntity.ok(userService.getTagRelateData(userPk));
     }
+
+    @PostMapping("/{userId}/wishlist/{gameId}")
+    public ResponseEntity<String> addToWishlist(@PathVariable String userId, @PathVariable String gameId) {
+        userService.addToWishlist(userId, gameId);
+        return ResponseEntity.ok("Game added to wishlist");
+    }
+
+    @DeleteMapping("/{userId}/wishlist/{gameId}")
+    public ResponseEntity<String> removeFromWishlist(@PathVariable String userId, @PathVariable String gameId) {
+        userService.removeFromWishlist(userId, gameId);
+        return ResponseEntity.ok("Game removed from wishlist");
+    }
 }
 
 @Getter

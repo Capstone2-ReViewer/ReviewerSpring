@@ -6,6 +6,7 @@ import com.example.reviewerspring.Repository.UserTagRelateRepository;
 import com.example.reviewerspring.domain.User;
 import com.example.reviewerspring.domain.UserTagPreferred;
 import com.example.reviewerspring.domain.UserTagRelate;
+import com.example.reviewerspring.domain.UserWishlist;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,5 +39,17 @@ public class UserService {
 
     public List<UserTagRelate> getTagRelateData(Integer userPk) {
         return userTagRelateRepository.findByUserPk(userPk);
+    }
+
+    public void addToWishlist(String userId, String gameId) {
+
+    }
+
+    public void removeFromWishlist(String userId, String gameId) {
+
+    }
+
+    public List<UserWishlist> getWishList(String userId) {
+        return null;
     }
 }
