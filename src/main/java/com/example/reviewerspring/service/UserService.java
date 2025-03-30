@@ -33,6 +33,22 @@ public class UserService {
         return user.orElse(null);
     }
 
+    public void logout(String userId) {
+
+    }
+
+    public Optional<User> getUserInfo(String userId) {
+        return userRepository.findByUserId(userId);
+    }
+
+    public Optional<User> updateUser(String userId, User updatedUser) {
+        return userRepository.findByUserId(userId);
+    }
+
+    public void deleteUser(String userId) {
+        userRepository.deleteByUserId(userId);
+    }
+
     public List<UserTagPreferred> getPreferredTags(Integer userPk) {
         return userTagPreferredRepository.findByUserPk(userPk);
     }
