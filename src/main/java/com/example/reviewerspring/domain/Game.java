@@ -5,10 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 
 @Entity
 @Table(name = "GAME_TB")
+@Document(collection = "game_info")
 @Getter @Setter
 public class Game {
     @Id

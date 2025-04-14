@@ -29,6 +29,11 @@ public class UserAPI {
         return ResponseEntity.ok("Login successful");
     }
 
+    @PostMapping("/users/logout")
+    public ResponseEntity<String> logout() {
+        return ResponseEntity.ok("Logout successful");
+    }
+
     @GetMapping("/users/{userPk}/preferred-tags")
     public ResponseEntity<List<UserTagPreferred>> getPreferredTags(@PathVariable Integer userPk) {
         return ResponseEntity.ok(userService.getPreferredTags(userPk));

@@ -38,6 +38,10 @@ public class UserService {
         return user.filter(u -> u.getPassword().equals(password)).orElse(null);
     }
 
+    public User logout() {
+        return null;
+    }
+
     public void logout(String userId) {
         // JWT 기반이면 토큰을 블랙리스트에 추가하는 로직을 구현 가능
         // 단순 로그아웃이면 클라이언트가 토큰을 삭제하는 방식 사용
