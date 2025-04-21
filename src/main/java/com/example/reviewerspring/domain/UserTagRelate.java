@@ -3,11 +3,11 @@ package com.example.reviewerspring.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 
-@Entity
-@Table(name = "USER_TAG_RELATE_TB")
+@Document(collection = "user_tag_relate")
 @IdClass(UserTagRelate.class)
 @Getter @Setter
 public class UserTagRelate implements Serializable {

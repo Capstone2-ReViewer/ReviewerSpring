@@ -3,14 +3,14 @@ package com.example.reviewerspring.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "USER_TB")
+@Document(collection = "user")
 @Getter @Setter
 public class User {
     @Id
     @Column(name = "USER_PK")
-    private Integer id;
+    private String id;
 
     private String userId;
     private String password;

@@ -7,8 +7,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "UPDATE")
 @Document(collection = "updates")
 @Getter
 @Setter

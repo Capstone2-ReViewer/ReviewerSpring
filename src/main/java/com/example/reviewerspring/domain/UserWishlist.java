@@ -3,9 +3,9 @@ package com.example.reviewerspring.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "USER_WISHLIST_TB")
+@Document(collection = "user_wishlist")
 @IdClass(UserWishlist.class)
 @Getter
 @Setter

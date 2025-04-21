@@ -1,5 +1,6 @@
 package com.example.reviewerspring.domain;
 
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -12,6 +13,7 @@ import java.util.List;
 @Setter
 public class GameMongo {
     @Id
+    @Column(name = "GAME_PK")
     private String id;
     private Integer appid;
 

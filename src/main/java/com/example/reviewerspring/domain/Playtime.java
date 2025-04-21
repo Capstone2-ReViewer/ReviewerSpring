@@ -3,9 +3,9 @@ package com.example.reviewerspring.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "PLAYTIME_TB")
+@Document(collection = "playtime")
 @Getter @Setter
 public class Playtime {
     @Id

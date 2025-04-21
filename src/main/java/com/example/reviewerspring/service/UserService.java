@@ -8,6 +8,7 @@ import com.example.reviewerspring.domain.User;
 import com.example.reviewerspring.domain.UserTagPreferred;
 import com.example.reviewerspring.domain.UserTagRelate;
 import com.example.reviewerspring.domain.UserWishlist;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,16 +22,20 @@ public class UserService {
     private final UserTagRelateRepository userTagRelateRepository;
     private final UserWishlistRepository userWishlistRepository;
 
+    private final PasswordEncoder encoder;
+
     public UserService(UserRepository userRepository, UserTagPreferredRepository userTagPreferredRepository,
-                       UserTagRelateRepository userTagRelateRepository, UserWishlistRepository userWishlistRepository) {
+                       UserTagRelateRepository userTagRelateRepository, UserWishlistRepository userWishlistRepository, PasswordEncoder encoder) {
         this.userRepository = userRepository;
         this.userTagPreferredRepository = userTagPreferredRepository;
         this.userTagRelateRepository = userTagRelateRepository;
         this.userWishlistRepository = userWishlistRepository;
+        this.encoder = encoder;
     }
 
-    public User registerUser(User user) {
-        return userRepository.save(user);
+    public void registerUser(User user) {
+        user.setPassword(encoder.encode(user.getPassword()));
+        userRepository.save(user);
     }
 
     public User login(String userId, String password) {

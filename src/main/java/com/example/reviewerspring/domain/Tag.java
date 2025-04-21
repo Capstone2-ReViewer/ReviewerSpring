@@ -3,11 +3,11 @@ package com.example.reviewerspring.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Entity
-@Table(name = "TAGS_TB")
+@Document(collection = "tag")
 @Getter @Setter
 public class Tag {
     @Id

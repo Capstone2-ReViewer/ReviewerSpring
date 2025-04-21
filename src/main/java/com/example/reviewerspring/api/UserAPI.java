@@ -8,22 +8,24 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Controller
 public class UserAPI {
     private final UserService userService;
 
     @PostMapping("/users/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
-        User savedUser = userService.registerUser(user);
-        return ResponseEntity.ok(savedUser);
+    public String register(@ModelAttribute User user) {
+        userService.registerUser(user);
+        return "redirect:/users/login";
     }
 
-    @PostMapping("/users/login")
+    /*@PostMapping("/users/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
         userService.login(request.getUserId(), request.getPassword());
         return ResponseEntity.ok("Login successful");
@@ -32,6 +34,16 @@ public class UserAPI {
     @PostMapping("/users/logout")
     public ResponseEntity<String> logout() {
         return ResponseEntity.ok("Logout successful");
+    }*/
+
+    @GetMapping("/users/login")
+    public String login() {
+        return "login";
+    }
+
+    @GetMapping("/users/signup")
+    public String signup() {
+        return "signup";
     }
 
     @GetMapping("/users/{userPk}/preferred-tags")

@@ -3,16 +3,16 @@ package com.example.reviewerspring.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "GAME_SCORE_TB")
+@Document(collection = "game_score")
 @Getter @Setter
 public class GameScore {
     @Id
     @Column(name = "GAME_PK")
-    private Integer gamePk;
+    private String gamePk;
 
     @OneToOne
     @MapsId
