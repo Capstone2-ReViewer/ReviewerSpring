@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface UserTagRelateRepository extends MongoRepository<UserTagRelate, String> {
     List<UserTagRelate> findByUserId(String userId);
     Optional<UserTagRelate> findByUserIdAndTagId(String userId, Integer tagId);
+    void deleteByUserId(String userId);
 }

@@ -2,9 +2,8 @@ package com.example.reviewerspring.service;
 
 import com.example.reviewerspring.domain.*;
 import com.example.reviewerspring.dto.UserSignupRequest;
-import com.example.reviewerspring.repository.TagRepository;
-import com.example.reviewerspring.repository.UserRepository;
-import com.example.reviewerspring.repository.UserTagPreferredRepository;
+import com.example.reviewerspring.dto.UserUpdateRequest;
+import com.example.reviewerspring.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
     private final UserTagPreferredRepository preferredRepository;
+    private final UserTagRelateRepository relateRepository;
+    private final UserWishlistRepository wishlistRepository;
 
     private final BCryptPasswordEncoder passwordEncoder;
 
@@ -83,4 +84,49 @@ public class UserService {
 
         return user.getId();  // 로그인 성공 시 내부 MongoDB용 id 반환
     }
-}
+
+    public void updateUser(UserUpdateRequest request) {
+        User user = userRepository.findByUserId(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 사용자 정보 업데이트
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setAge(request.getAge());
+        user.setGender(request.getGender());
+
+        userRepository.save(user);
+
+        // 기존 선호/비선호 태그 제거
+        preferredRepository.deleteByUserId(user.getId());
+
+        // 새로 저장
+        for (Integer tagId : request.getPreferredTags()) {
+            UserTagPreferred preferred = new UserTagPreferred();
+            preferred.setUserId(user.getId());
+            preferred.setTagId(tagId);
+            preferredRepository.save(preferred);
+        }
+
+        for (Integer tagId : request.getDislikedTags()) {
+            UserTagPreferred disliked = new UserTagPreferred();
+            disliked.setUserId(user.getId());
+            disliked.setTagId(tagId);
+            preferredRepository.save(disliked);
+        }
+    }
+
+    public void deleteUser(String userId) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 관련 문서 먼저 삭제
+        preferredRepository.deleteByUserId(user.getId());
+        relateRepository.deleteByUserId(user.getId());
+        wishlistRepository.deleteByUserId(user.getId());
+
+        // 유저 삭제
+        userRepository.delete(user);
+    }
+}  

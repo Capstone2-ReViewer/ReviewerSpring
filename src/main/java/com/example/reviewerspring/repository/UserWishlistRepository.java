@@ -10,4 +10,5 @@ import java.util.List;
 public interface UserWishlistRepository extends MongoRepository<UserWishlist, String> {
     List<UserWishlist> findByUserId(String userId);
     void deleteByUserIdAndGameId(String userId, String gameId);
+    void deleteByUserId(String userId);
 }

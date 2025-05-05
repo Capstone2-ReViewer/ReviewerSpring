@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface UserTagPreferredRepository extends MongoRepository<UserTagPreferred, String> {
     List<UserTagPreferred> findByUserId(String userId);
+    void deleteByUserId(String userId);
 }
 

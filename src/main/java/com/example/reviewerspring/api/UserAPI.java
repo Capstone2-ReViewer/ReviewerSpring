@@ -2,9 +2,11 @@ package com.example.reviewerspring.api;
 
 import com.example.reviewerspring.dto.LoginRequest;
 import com.example.reviewerspring.dto.UserSignupRequest;
+import com.example.reviewerspring.dto.UserUpdateRequest;
 import com.example.reviewerspring.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,5 +47,26 @@ public class UserAPI {
     public ResponseEntity<?> logout(HttpSession session) {
         session.invalidate();
         return ResponseEntity.ok("로그아웃 완료");
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<String> updateUser(@RequestBody UserUpdateRequest request) {
+        try {
+            userService.updateUser(request);
+            return ResponseEntity.ok("회원 정보가 성공적으로 수정되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteUser(@RequestParam String userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("회원 탈퇴에 실패했습니다: " + e.getMessage());
+        }
     }
 }
