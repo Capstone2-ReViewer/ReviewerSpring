@@ -1,4 +1,4 @@
-package com.example.reviewerspring.Repository;
+package com.example.reviewerspring.repository;
 
 import com.example.reviewerspring.domain.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByUserId(String userId);
-    void deleteByUserId(String userId);
+    boolean existsByUserId(String userId);
 }
+

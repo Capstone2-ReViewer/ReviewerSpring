@@ -1,6 +1,6 @@
 package com.example.reviewerspring.security;
 
-import com.example.reviewerspring.Repository.UserRepository;
+import com.example.reviewerspring.repository.UserRepository;
 import com.example.reviewerspring.domain.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -1,8 +1,8 @@
 package com.example.reviewerspring.domain;
 
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -12,14 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 public class Update {
     @Id
-    @Column(name = "GAME_PK")
-    private Integer gamePk;
+    private String id; // 게임 ID
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "GAME_PK")
-    private Game game;
-
-    @Column(name = "Field")
     private LocalDateTime updateDate;
 }

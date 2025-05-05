@@ -1,41 +1,38 @@
 package com.example.reviewerspring.domain;
 
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.List;
 
-@Entity
-@Table(name = "GAME_TB")
 @Document(collection = "game_info")
-@Getter @Setter
+@Getter
+@Setter
 public class Game {
     @Id
-    @Column(name = "GAME_PK")
-    private Integer id;
-//  웹 크롤링한다고 했지않나?
-//    private String title;
-//    private String poster;
-//    private String synopsis;
-//    private String genre;
-//    private String dev;
-//    private String publisher;
+    private String id;
+    private Integer appid;
 
-    @Column(name = "launch_date")
-    private String launchDate;
+    private String game_name;
+    private String name;
 
-    @OneToOne(mappedBy = "game")
+    private String description;
+
+    private List<String> genres;
+    private List<String> categories;
+
+    private String image;
+    private String release_date;
+
+    private Integer price;
+    private String price_text;
+
+    private Integer discount;
+
     private GameScore score;
-
-    @OneToOne(mappedBy = "game")
     private Playtime playtime;
-
-    @OneToOne(mappedBy = "game")
     private Update update;
-
-    @OneToMany(mappedBy = "game")
     private List<GameTag> tags;
 }

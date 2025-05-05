@@ -1,9 +1,8 @@
 package com.example.reviewerspring.api;
 
-import com.example.reviewerspring.Repository.GameInfoRepository;
-import com.example.reviewerspring.domain.GameMongo;
+import com.example.reviewerspring.repository.GameInfoRepository;
+import com.example.reviewerspring.domain.Game;
 import com.example.reviewerspring.service.GameService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class GameInfoAPI {
     }
 
     @GetMapping("/search/{GAME_PK}")
-    public List<GameMongo> searchGameByName(@RequestParam("name") String name) {
+    public List<Game> searchGameByName(@RequestParam("name") String name) {
         return gameInfoRepository.findByNameContainingIgnoreCase(name);
     }
 }

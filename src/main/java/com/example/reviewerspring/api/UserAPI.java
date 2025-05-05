@@ -1,77 +1,49 @@
 package com.example.reviewerspring.api;
 
-import com.example.reviewerspring.domain.User;
-import com.example.reviewerspring.domain.UserTagPreferred;
-import com.example.reviewerspring.domain.UserTagRelate;
+import com.example.reviewerspring.dto.LoginRequest;
+import com.example.reviewerspring.dto.UserSignupRequest;
 import com.example.reviewerspring.service.UserService;
-import lombok.Getter;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
-@Controller
 public class UserAPI {
     private final UserService userService;
 
-    @PostMapping("/users/register")
-    public String register(@ModelAttribute User user) {
-        userService.registerUser(user);
-        return "redirect:/users/login";
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody UserSignupRequest request) {
+        try {
+            userService.signup(request);
+            return ResponseEntity.ok("회원가입이 완료되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    /*@PostMapping("/users/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        userService.login(request.getUserId(), request.getPassword());
-        return ResponseEntity.ok("Login successful");
+    @GetMapping("/check-id")
+    public ResponseEntity<?> checkUserIdDuplicate(@RequestParam String userId) {
+        boolean isAvailable = userService.isUserIdAvailable(userId);
+        return ResponseEntity.ok(isAvailable);
     }
 
-    @PostMapping("/users/logout")
-    public ResponseEntity<String> logout() {
-        return ResponseEntity.ok("Logout successful");
-    }*/
-
-    @GetMapping("/users/login")
-    public String login() {
-        return "login";
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpSession session) {
+        try {
+            String userId = userService.login(request.getUserId(), request.getPassword());
+            session.setAttribute("userId", userId);
+            return ResponseEntity.ok("로그인 성공");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping("/users/signup")
-    public String signup() {
-        return "signup";
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok("로그아웃 완료");
     }
-
-    @GetMapping("/users/{userPk}/preferred-tags")
-    public ResponseEntity<List<UserTagPreferred>> getPreferredTags(@PathVariable Integer userPk) {
-        return ResponseEntity.ok(userService.getPreferredTags(userPk));
-    }
-
-    @GetMapping("/users/{userPk}/tag-relate")
-    public ResponseEntity<List<UserTagRelate>> getTagRelateData(@PathVariable Integer userPk) {
-        return ResponseEntity.ok(userService.getTagRelateData(userPk));
-    }
-
-    @PostMapping("/users/{userId}/wishlist/{gameId}")
-    public ResponseEntity<String> addToWishlist(@PathVariable String userId, @PathVariable String gameId) {
-        userService.addToWishlist(userId, gameId);
-        return ResponseEntity.ok("Game added to wishlist");
-    }
-
-    @DeleteMapping("/users/{userId}/wishlist/{gameId}")
-    public ResponseEntity<String> removeFromWishlist(@PathVariable String userId, @PathVariable String gameId) {
-        userService.removeFromWishlist(userId, gameId);
-        return ResponseEntity.ok("Game removed from wishlist");
-    }
-}
-
-@Getter
-@Setter
-class LoginRequest {
-    private String userId;
-    private String password;
 }

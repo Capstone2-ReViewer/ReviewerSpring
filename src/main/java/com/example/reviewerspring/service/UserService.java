@@ -1,95 +1,86 @@
 package com.example.reviewerspring.service;
 
-import com.example.reviewerspring.Repository.UserRepository;
-import com.example.reviewerspring.Repository.UserTagPreferredRepository;
-import com.example.reviewerspring.Repository.UserTagRelateRepository;
-import com.example.reviewerspring.Repository.UserWishlistRepository;
-import com.example.reviewerspring.domain.User;
-import com.example.reviewerspring.domain.UserTagPreferred;
-import com.example.reviewerspring.domain.UserTagRelate;
-import com.example.reviewerspring.domain.UserWishlist;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.reviewerspring.domain.*;
+import com.example.reviewerspring.dto.UserSignupRequest;
+import com.example.reviewerspring.repository.TagRepository;
+import com.example.reviewerspring.repository.UserRepository;
+import com.example.reviewerspring.repository.UserTagPreferredRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
+
     private final UserRepository userRepository;
-    private final UserTagPreferredRepository userTagPreferredRepository;
-    private final UserTagRelateRepository userTagRelateRepository;
-    private final UserWishlistRepository userWishlistRepository;
+    private final TagRepository tagRepository;
+    private final UserTagPreferredRepository preferredRepository;
 
-    private final PasswordEncoder encoder;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserTagPreferredRepository userTagPreferredRepository,
-                       UserTagRelateRepository userTagRelateRepository, UserWishlistRepository userWishlistRepository, PasswordEncoder encoder) {
-        this.userRepository = userRepository;
-        this.userTagPreferredRepository = userTagPreferredRepository;
-        this.userTagRelateRepository = userTagRelateRepository;
-        this.userWishlistRepository = userWishlistRepository;
-        this.encoder = encoder;
+    public void signup(UserSignupRequest request) {
+        // 입력 검증
+        if (request.getUserId() == null || request.getPassword() == null || request.getPasswordCheck() == null
+                || request.getName() == null || request.getNickname() == null
+                || request.getAge() == null || request.getGender() == null
+                || request.getPreferredTags() == null || request.getDislikedTags() == null) {
+            throw new IllegalArgumentException("모든 항목을 입력해주세요.");
+        }
+
+        if (!request.getPassword().equals(request.getPasswordCheck())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        if (!isUserIdAvailable(request.getUserId())) {
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
+
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+        // User 저장
+        User user = new User();
+        user.setUserId(request.getUserId());
+        user.setPassword(encodedPassword);  // 암호화된 비밀번호 저장
+        user.setName(request.getName());
+        user.setNickname(request.getNickname());
+        user.setAge(request.getAge());
+        user.setGender(request.getGender());
+
+        User savedUser = userRepository.save(user);
+        String userId = savedUser.getId();
+
+        // 선호 / 비선호 태그 저장
+        for (Integer tagId : request.getPreferredTags()) {
+            UserTagPreferred tag = new UserTagPreferred();
+            tag.setUserId(userId);
+            tag.setTagId(tagId);
+            preferredRepository.save(tag);
+        }
+        for (Integer tagId : request.getDislikedTags()) {
+            UserTagPreferred tag = new UserTagPreferred();
+            tag.setUserId(userId);
+            tag.setTagId(tagId);
+            preferredRepository.save(tag); // 비선호도 같은 테이블에 저장됨
+        }
     }
 
-    public void registerUser(User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
-        userRepository.save(user);
+    public boolean isUserIdAvailable(String userId) {
+        return !userRepository.existsByUserId(userId);
     }
 
-    public User login(String userId, String password) {
-        Optional<User> user = userRepository.findByUserId(userId);
-        return user.filter(u -> u.getPassword().equals(password)).orElse(null);
-    }
+    public String login(String userId, String password) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
 
-    public User logout() {
-        return null;
-    }
+        // 비밀번호 검증
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
 
-    public void logout(String userId) {
-        // JWT 기반이면 토큰을 블랙리스트에 추가하는 로직을 구현 가능
-        // 단순 로그아웃이면 클라이언트가 토큰을 삭제하는 방식 사용
-    }
-
-    public Optional<User> getUserInfo(String userId) {
-        return userRepository.findByUserId(userId);
-    }
-
-    @Transactional
-    public Optional<User> updateUser(String userId, User updatedUser) {
-        return userRepository.findByUserId(userId).map(user -> {
-            user.setNickname(updatedUser.getNickname());
-            user.setAge(updatedUser.getAge());
-            user.setGender(updatedUser.getGender());
-            return userRepository.save(user);
-        });
-    }
-
-    public void deleteUser(String userId) {
-        userRepository.deleteByUserId(userId);
-    }
-
-    public List<UserTagPreferred> getPreferredTags(Integer userPk) {
-        return userTagPreferredRepository.findByUserPk(userPk);
-    }
-
-    public List<UserTagRelate> getTagRelateData(Integer userPk) {
-        return userTagRelateRepository.findByUserPk(userPk);
-    }
-
-    public void addToWishlist(String userId, String gameId) {
-        User user = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        UserWishlist wishlist = new UserWishlist();
-        wishlist.setUser(user);
-        userWishlistRepository.save(wishlist);
-    }
-
-    public void removeFromWishlist(String userId, String gameId) {
-        userWishlistRepository.deleteByUserIdAndGameId(userId, gameId);
-    }
-
-    public List<UserWishlist> getWishList(String userId) {
-        return userWishlistRepository.findByUserId(userId);
+        return user.getId();  // 로그인 성공 시 내부 MongoDB용 id 반환
     }
 }

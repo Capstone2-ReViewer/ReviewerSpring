@@ -1,7 +1,6 @@
 package com.example.reviewerspring.service;
 
-import com.example.reviewerspring.Repository.GameRepository;
-import com.example.reviewerspring.domain.Game;
+import com.example.reviewerspring.repository.GameRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
