@@ -66,10 +66,6 @@ public class GameService {
         return null;
     }
 
-    public List<Game> searchGames(String title) {
-        return null;
-    }
-
     public List<Game> getWishListGames(String userId) {
         return null;
     }

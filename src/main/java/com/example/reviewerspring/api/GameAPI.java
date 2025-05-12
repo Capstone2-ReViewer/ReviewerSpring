@@ -28,11 +28,6 @@ public class GameAPI {
         return null;
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<Game>> searchGames() {
-        return null;
-    }
-
     @GetMapping("/wishlist/compare/{userId}")
     public ResponseEntity<List<Game>> compareWishlistGames(@PathVariable String userId) {
         return null;

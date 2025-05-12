@@ -9,5 +9,4 @@ import java.util.Optional;
 public interface GameRepository extends MongoRepository<Game, String> {
     Optional<Game> findByAppid(Integer appid);
     List<Game> findByGenresIn(List<String> genres);
-    List<Game> findByNameContainingIgnoreCase(String keyword);
 }
