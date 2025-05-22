@@ -10,6 +10,5 @@ import java.util.List;
 public interface UserTagPreferredRepository extends MongoRepository<UserTagPreferred, String> {
     List<UserTagPreferred> findByUserId(String userId);
     void deleteByUserId(String userId);
-    List<UserTagPreferred> findByUserPk(String userPk);
 }
 

@@ -99,7 +99,7 @@ public class GameService {
 
     // 유저 선호 태그 기반 게임 순위
     public List<Game> getTopRankedGamesByUserTag(String userId) {
-        List<Integer> preferredTagIds = userTagPreferredRepository.findByUserPk(userId).stream()
+        List<Integer> preferredTagIds = userTagPreferredRepository.findByUserId(userId).stream()
                 .map(p -> p.getTagId())
                 .toList();
 
