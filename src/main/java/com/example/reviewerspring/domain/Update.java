@@ -14,5 +14,6 @@ public class Update {
     @Id
     private String id; // 게임 ID
 
+    private Integer appid;
     private LocalDateTime updateDate;
 }

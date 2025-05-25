@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>게임 정보 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px 0;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>게임 상세 정보 테스트</h2>
+<label for="appid">AppID 입력:</label>
+<input type="number" id="appid" placeholder="예: 730">
+<button onclick="getGameDetail()">불러오기</button>
+
+<div class="result" id="result"></div>
+
+<script>
+    async function getGameDetail() {
+        const appid = document.getElementById("appid").value;
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "불러오는 중...";
+
+        try {
+            const response = await fetch(`/api/games/${appid}`);
+            if (!response.ok) {
+                throw new Error("게임 정보를 가져오지 못했습니다.");
+            }
+
+            const data = await response.json();
+
+            resultDiv.innerHTML = `
+                <h3>${data.title}</h3>
+                <img src="${data.image}" alt="게임 이미지">
+                <p><strong>설명:</strong> ${data.description}</p>
+                <p><strong>장르:</strong> ${data.genres.join(', ')}</p>
+                <p><strong>긍정 키워드:</strong> ${data.posiWord}</p>
+                <p><strong>부정 키워드:</strong> ${data.negaWord}</p>
+                <h4>점수 트렌드</h4>
+                <ul>
+                    <li>평균 점수: ${data.scoreTrend.average}</li>
+                    <li>상위 10% 플레이타임: ${data.scoreTrend.top10Percent}</li>
+                    <li>중앙값: ${data.scoreTrend.median}</li>
+                    <li>표준편차: ${data.scoreTrend.stdDev}</li>
+                </ul>
+                <h4>비슷한 게임</h4>
+                <ul>
+                    ${data.similarGames.map(g => `
+                        <li>${g.title} (AppID: ${g.appid}) <br><img src="${g.image}" width="100"></li>
+                    `).join('')}
+                </ul>
+            `;
+        } catch (error) {
+            resultDiv.innerHTML = `<span style="color: red;">${error.message}</span>`;
+        }
+    }
+</script>
+
+</body>
+</html>

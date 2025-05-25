@@ -11,6 +11,7 @@ public class Playtime {
     @Id
     private String id; // 게임 ID
 
+    private Integer appid;
     private Integer avg;
     private Integer top10per;
 }

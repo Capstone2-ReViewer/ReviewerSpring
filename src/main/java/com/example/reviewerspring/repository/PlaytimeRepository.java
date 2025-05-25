@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface PlaytimeRepository extends MongoRepository<Playtime, String> {
-    Optional<Playtime> findById(String gameId);
+    Optional<Playtime> findById(String id);
+    Optional<Playtime> findByAppid(Integer appid);
 }
 

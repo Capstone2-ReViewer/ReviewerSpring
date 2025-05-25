@@ -1,13 +1,9 @@
 package com.example.reviewerspring.service;
 
-import com.example.reviewerspring.domain.Game;
-import com.example.reviewerspring.domain.GameScore;
-import com.example.reviewerspring.domain.Playtime;
-import com.example.reviewerspring.domain.UserWishlist;
+import com.example.reviewerspring.domain.*;
 import com.example.reviewerspring.dto.GameDetailResponse;
-import com.example.reviewerspring.repository.GameRepository;
-import com.example.reviewerspring.repository.UserTagPreferredRepository;
-import com.example.reviewerspring.repository.UserWishlistRepository;
+import com.example.reviewerspring.dto.GameFullInfoDto;
+import com.example.reviewerspring.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -19,28 +15,77 @@ import java.util.stream.Collectors;
 public class GameService {
 
     private final GameRepository gameRepository;
+    private final GameScoreRepository gameScoreRepository;
+    private final PlaytimeRepository playtimeRepository;
+    private final UpdateRepository updateRepository;
+    private final GameTagRepository gameTagRepository;
     private final UserWishlistRepository wishlistRepository;
     private final UserTagPreferredRepository userTagPreferredRepository;
     //repository에서 데이터 받아와서 api에 전달
-    public GameService(GameRepository gameRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository) {
+    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository) {
         this.gameRepository = gameRepository;
+        this.gameScoreRepository = gameScoreRepository;
+        this.playtimeRepository = playtimeRepository;
+        this.updateRepository = updateRepository;
+        this.gameTagRepository = gameTagRepository;
         this.wishlistRepository = wishlistRepository;
         this.userTagPreferredRepository = userTagPreferredRepository;
+    }
+
+    public GameFullInfoDto getFullGameInfo(Integer appid) {
+        Game game = gameRepository.findByAppid(appid)
+                .orElseThrow(() -> new RuntimeException("Game not found"));
+
+        GameScore score = gameScoreRepository.findByAppid(appid).orElse(null);
+        Playtime playtime = playtimeRepository.findByAppid(appid).orElse(null);
+        Update update = updateRepository.findByAppid(appid).orElse(null);
+        List<GameTag> tags = gameTagRepository.findByGamePk(appid);
+
+        GameFullInfoDto dto = new GameFullInfoDto();
+        dto.setAppid(game.getAppid());
+        dto.setGameName(game.getGame_name());
+        dto.setName(game.getName());
+        dto.setDescription(game.getDescription());
+        dto.setGenres(game.getGenres());
+        dto.setCategories(game.getCategories());
+        dto.setImage(game.getImage());
+        dto.setReleaseDate(game.getRelease_date());
+        dto.setPrice(game.getPrice());
+        dto.setPriceText(game.getPrice_text());
+        dto.setDiscount(game.getDiscount());
+
+        if (score != null) {
+            dto.setScore(score.getScore());
+            dto.setScoreByDate(score.getScorebydate());
+            dto.setPosiWord(score.getPosiWord());
+            dto.setNegaWord(score.getNegaWord());
+        }
+
+        if (playtime != null) {
+            dto.setAvgPlaytime(playtime.getAvg());
+            dto.setTop10per(playtime.getTop10per());
+        }
+
+        if (update != null) {
+            dto.setUpdateDate(update.getUpdateDate());
+        }
+
+        dto.setTags(tags);
+
+        return dto;
     }
 
     public GameDetailResponse getGameDetail(Integer appid) {
         Game game = gameRepository.findByAppid(appid)
                 .orElseThrow(() -> new RuntimeException("게임을 찾을 수 없습니다."));
 
-        // 평균 점수 등
-        GameScore score = game.getScore();
-        Playtime playtime = game.getPlaytime();
+        GameScore score = gameScoreRepository.findByAppid(appid).orElse(null);
+        Playtime playtime = playtimeRepository.findByAppid(appid).orElse(null);
 
-        // 중위값과 표준편차는 간단 예시로 고정 값 또는 null 처리 가능
-        double median = score.getScore(); // 샘플 처리
-        double stdDev = 1.2; // 추후 계산
+        double median = score != null ? score.getScore() : 0.0;
+        double stdDev = 1.2; // 필요시 계산
 
-        // 비슷한 게임: 같은 장르 중에서 자신 제외하고 일부만
+        // 비슷한 게임
         List<Game> similar = gameRepository.findByGenresIn(game.getGenres()).stream()
                 .filter(g -> !g.getAppid().equals(appid))
                 .limit(5)
@@ -55,11 +100,11 @@ public class GameService {
                 game.getImage(),
                 game.getDescription(),
                 game.getGenres(),
-                score.getPosiWord(),
-                score.getNegaWord(),
+                score != null ? score.getPosiWord() : null,
+                score != null ? score.getNegaWord() : null,
                 new GameDetailResponse.ScoreTrend(
-                        score.getScore(),
-                        playtime.getTop10per(),
+                        score != null ? score.getScore() : null,
+                        playtime != null ? playtime.getTop10per() : null,
                         median,
                         stdDev
                 ),
@@ -92,23 +137,38 @@ public class GameService {
     // 전체 게임 순위 출력 (점수 기준 내림차순)
     public List<Game> getTopRankedGames() {
         List<Game> allGames = gameRepository.findAll();
+
         return allGames.stream()
-                .sorted(Comparator.comparingDouble(g -> -g.getScore().getScore()))
+                .map(game -> {
+                    GameScore score = gameScoreRepository.findByAppid(game.getAppid()).orElse(null);
+                    double s = score != null ? score.getScore() : 0.0;
+                    return new Object[] { game, s };
+                })
+                .sorted((a, b) -> Double.compare((double)b[1], (double)a[1]))
+                .map(pair -> (Game) pair[0])
                 .collect(Collectors.toList());
     }
 
     // 유저 선호 태그 기반 게임 순위
     public List<Game> getTopRankedGamesByUserTag(String userId) {
         List<Integer> preferredTagIds = userTagPreferredRepository.findByUserId(userId).stream()
-                .map(p -> p.getTagId())
+                .map(UserTagPreferred::getTagId)
                 .toList();
 
         List<Game> allGames = gameRepository.findAll();
 
         return allGames.stream()
-                .filter(game -> game.getTags() != null && game.getTags().stream()
-                        .anyMatch(tag -> preferredTagIds.contains(tag.getTagPk())))
-                .sorted(Comparator.comparingDouble(g -> -g.getScore().getScore()))
+                .filter(game -> {
+                    List<GameTag> tags = gameTagRepository.findByGamePk(game.getAppid());
+                    return tags.stream().anyMatch(tag -> preferredTagIds.contains(tag.getTagPk()));
+                })
+                .map(game -> {
+                    GameScore score = gameScoreRepository.findByAppid(game.getAppid()).orElse(null);
+                    double s = score != null ? score.getScore() : 0.0;
+                    return new Object[] { game, s };
+                })
+                .sorted((a, b) -> Double.compare((double)b[1], (double)a[1]))
+                .map(pair -> (Game) pair[0])
                 .collect(Collectors.toList());
     }
 

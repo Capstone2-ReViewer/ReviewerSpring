@@ -11,6 +11,7 @@ public class GameScore {
     @Id
     private String id;
 
+    private Integer appid;
     private double score;
     private double scorebydate;
 

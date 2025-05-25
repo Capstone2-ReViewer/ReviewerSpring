@@ -31,8 +31,8 @@ public class Game {
 
     private Integer discount;
 
-    private GameScore score;
-    private Playtime playtime;
-    private Update update;
-    private List<GameTag> tags;
+//    private GameScore score;
+//    private Playtime playtime;
+//    private Update update;
+//    private List<GameTag> tags;
 }
