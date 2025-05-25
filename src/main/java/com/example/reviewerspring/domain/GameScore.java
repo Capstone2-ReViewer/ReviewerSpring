@@ -12,7 +12,7 @@ public class GameScore {
     private String id;
 
     private double score;
-    private String scorebydate;
+    private double scorebydate;
 
     private String posiWord;
     private String negaWord;
