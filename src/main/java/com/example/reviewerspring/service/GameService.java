@@ -6,9 +6,7 @@ import com.example.reviewerspring.dto.GameFullInfoDto;
 import com.example.reviewerspring.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -175,6 +173,19 @@ public class GameService {
     // 찜 게임 비교 (단순 리스트 반환)
     public List<Game> compareWishListGames(String userId) {
         return getWishListGames(userId);
+    }
+
+    public List<Map<String, Object>> getSimpleGameList() {
+        List<Game> allGames = gameRepository.findAll();
+
+        return allGames.stream()
+                .map(game -> {
+                    Map<String, Object> map = new LinkedHashMap<>();
+                    map.put("appid", game.getAppid());
+                    map.put("game_name", game.getGame_name());
+                    return map;
+                })
+                .toList();
     }
 
 }

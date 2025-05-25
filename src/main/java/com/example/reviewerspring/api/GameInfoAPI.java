@@ -23,7 +23,7 @@ public class GameInfoAPI {
         this.gameInfoRepository = gameInfoRepository;
     }
 
-    @GetMapping("/search/{GAME_PK}")
+    @GetMapping("/search")
     public List<Game> searchGameByName(@RequestParam("name") String name) {
         return gameInfoRepository.findByNameContainingIgnoreCase(name);
     }
