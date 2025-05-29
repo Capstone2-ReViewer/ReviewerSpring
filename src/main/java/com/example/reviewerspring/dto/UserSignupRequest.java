@@ -5,17 +5,25 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 public class UserSignupRequest {
     private String userId;
     private String password;
     private String passwordCheck;
-
     private String name;
     private String nickname;
     private Integer age;
     private String gender;
 
-    private List<Integer> preferredTags;    // tagId list
-    private List<Integer> dislikedTags;     // tagId list
+    private List<TagInfo> preferredTags;
+    private List<TagInfo> dislikedTags;
+
+    @Getter
+    @Setter
+    public static class TagInfo {
+        private Integer tagId;
+        private String tagName;
+    }
 }
+

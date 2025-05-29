@@ -54,18 +54,24 @@ public class UserService {
         User savedUser = userRepository.save(user);
         String userId = savedUser.getId();
 
-        // 선호 / 비선호 태그 저장
-        for (Integer tagId : request.getPreferredTags()) {
-            UserTagPreferred tag = new UserTagPreferred();
-            tag.setUserId(userId);
-            tag.setTagId(tagId);
-            preferredRepository.save(tag);
+        // 선호 태그 저장
+        for (UserSignupRequest.TagInfo tag : request.getPreferredTags()) {
+            UserTagPreferred preferred = new UserTagPreferred();
+            preferred.setUserId(userId);
+            preferred.setTagId(tag.getTagId());
+            preferred.setTagName(tag.getTagName());
+            preferred.setPreferred(true);
+            preferredRepository.save(preferred);
         }
-        for (Integer tagId : request.getDislikedTags()) {
-            UserTagPreferred tag = new UserTagPreferred();
-            tag.setUserId(userId);
-            tag.setTagId(tagId);
-            preferredRepository.save(tag); // 비선호도 같은 테이블에 저장됨
+
+        // 비선호 태그 저장
+        for (UserSignupRequest.TagInfo tag : request.getDislikedTags()) {
+            UserTagPreferred disliked = new UserTagPreferred();
+            disliked.setUserId(userId);
+            disliked.setTagId(tag.getTagId());
+            disliked.setTagName(tag.getTagName());
+            disliked.setPreferred(false);
+            preferredRepository.save(disliked);
         }
     }
 
@@ -101,20 +107,24 @@ public class UserService {
         // 기존 선호/비선호 태그 제거
         preferredRepository.deleteByUserId(user.getId());
 
-        // 새로 저장
-        for (Integer tagId : request.getPreferredTags()) {
+        // 선호 태그 저장
+        for (UserUpdateRequest.TagInfo tag : request.getPreferredTags()) {
             UserTagPreferred preferred = new UserTagPreferred();
-            preferred.setUserId(user.getId());
-            preferred.setTagId(tagId);
+            preferred.setTagId(tag.getTagId());
+            preferred.setTagName(tag.getTagName());
+            preferred.setPreferred(true);
             preferredRepository.save(preferred);
         }
 
-        for (Integer tagId : request.getDislikedTags()) {
+        // 비선호 태그 저장
+        for (UserUpdateRequest.TagInfo tag : request.getDislikedTags()) {
             UserTagPreferred disliked = new UserTagPreferred();
-            disliked.setUserId(user.getId());
-            disliked.setTagId(tagId);
+            disliked.setTagId(tag.getTagId());
+            disliked.setTagName(tag.getTagName());
+            disliked.setPreferred(false);
             preferredRepository.save(disliked);
         }
+
     }
 
     public void deleteUser(String userId) {

@@ -1,9 +1,11 @@
 package com.example.reviewerspring.dto;
 
 import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
-@Getter
+@Getter @Setter
 public class UserUpdateRequest {
     private String userId;
     private String password;
@@ -11,6 +13,13 @@ public class UserUpdateRequest {
     private String nickname;
     private Integer age;
     private String gender;
-    private List<Integer> preferredTags;
-    private List<Integer> dislikedTags;
+    private List<TagInfo> preferredTags;
+    private List<TagInfo> dislikedTags;
+
+    @Getter
+    @Setter
+    public static class TagInfo {
+        private Integer tagId;
+        private String tagName;
+    }
 }

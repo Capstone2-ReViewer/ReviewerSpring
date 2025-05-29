@@ -7,7 +7,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 
-@Getter @Setter
+@Getter
+@Setter
 @Document(collection = "userTagPreferred")
 public class UserTagPreferred implements Serializable {
     @Id
@@ -15,4 +16,8 @@ public class UserTagPreferred implements Serializable {
 
     private String userId;
     private Integer tagId;
+    private String tagName;
+
+    private boolean isPreferred;  // true면 선호, false면 비선호
 }
+

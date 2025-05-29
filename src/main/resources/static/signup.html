@@ -1,52 +1,100 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>회원가입</title>
 </head>
 <body>
 <h2>회원가입</h2>
 <form id="signup-form">
-    <input type="text" name="userId" placeholder="아이디" required><br>
-    <input type="password" name="password" placeholder="비밀번호" required><br>
-    <input type="password" name="passwordCheck" placeholder="비밀번호 확인" required><br>
-    <input type="text" name="name" placeholder="이름" required><br>
-    <input type="text" name="nickname" placeholder="닉네임" required><br>
-    <input type="number" name="age" placeholder="나이" required><br>
+    <input type="text" name="userId" placeholder="아이디" required /><br />
+    <input type="password" name="password" placeholder="비밀번호" required /><br />
+    <input type="password" name="passwordCheck" placeholder="비밀번호 확인" required /><br />
+    <input type="text" name="name" placeholder="이름" required /><br />
+    <input type="text" name="nickname" placeholder="닉네임" required /><br />
+    <input type="number" name="age" placeholder="나이" required min="1" /><br />
     <select name="gender" required>
         <option value="">성별 선택</option>
         <option value="남자">남자</option>
         <option value="여자">여자</option>
-    </select><br>
-    <input type="text" name="preferredTags" placeholder="선호 태그 (쉼표로 구분된 tagId들)" required><br>
-    <input type="text" name="dislikedTags" placeholder="비선호 태그 (쉼표로 구분된 tagId들)" required><br>
+    </select><br />
+    <input type="text" name="preferredTags" placeholder="선호 태그 (쉼표로 구분된 tagId들)" /><br />
+    <input type="text" name="dislikedTags" placeholder="비선호 태그 (쉼표로 구분된 tagId들)" /><br />
     <button type="submit">회원가입</button>
 </form>
 
 <script>
+    // 태그 ID-이름 매핑
+    const tagMap = {
+        1: "액션",
+        2: "어드벤처",
+        3: "RPG",
+        4: "시뮬레이션",
+        5: "스포츠",
+        6: "전략",
+        7: "캐주얼",
+        8: "공포",
+        9: "퍼즐",
+        10: "레이싱"
+    };
+
+    const parseTags = (tagStr) => {
+        if (!tagStr.trim()) return []; // 빈 문자열이면 빈 배열 반환
+        const tags = tagStr
+            .split(',')
+            .map(str => str.trim())
+            .filter(s => s !== '')
+            .map(idStr => {
+                const id = parseInt(idStr);
+                if (isNaN(id)) throw new Error(`잘못된 태그 ID: "${idStr}"`);
+                return { tagId: id, tagName: tagMap[id] || "알 수 없음" };
+            });
+        return tags;
+    };
+
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
+
+        let preferredTags, dislikedTags;
+        try {
+            preferredTags = parseTags(form.preferredTags.value);
+            dislikedTags = parseTags(form.dislikedTags.value);
+        } catch (err) {
+            alert(err.message);
+            return;
+        }
+
         const data = {
-            userId: form.userId.value,
+            userId: form.userId.value.trim(),
             password: form.password.value,
             passwordCheck: form.passwordCheck.value,
-            name: form.name.value,
-            nickname: form.nickname.value,
+            name: form.name.value.trim(),
+            nickname: form.nickname.value.trim(),
             age: parseInt(form.age.value),
             gender: form.gender.value,
-            preferredTags: form.preferredTags.value.split(',').map(Number),
-            dislikedTags: form.dislikedTags.value.split(',').map(Number),
+            preferredTags,
+            dislikedTags
         };
 
-        const res = await fetch('/api/user/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
+        try {
+            const res = await fetch('/api/user/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
 
-        const text = await res.text();
-        alert(text);
+            if (res.ok) {
+                alert('회원가입이 완료되었습니다!');
+                form.reset();  // 가입 성공하면 폼 초기화
+            } else {
+                const errorText = await res.text();
+                alert('회원가입 실패: ' + errorText);
+            }
+        } catch (error) {
+            alert('서버와 통신 중 오류가 발생했습니다.');
+            console.error(error);
+        }
     });
 </script>
 </body>
