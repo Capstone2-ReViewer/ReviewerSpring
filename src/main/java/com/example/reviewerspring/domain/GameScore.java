@@ -1,5 +1,6 @@
 package com.example.reviewerspring.domain;
 
+import com.example.reviewerspring.dto.SimpleKeyword;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -17,7 +18,7 @@ public class GameScore {
     private double score;
     private List<ScoreByDate> scorebydate;
 
-    private String posiWord;
-    private String negaWord;
+    private List<SimpleKeyword> posiWord;
+    private List<SimpleKeyword> negaWord;
 }
 

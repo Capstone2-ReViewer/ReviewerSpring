@@ -3,10 +3,15 @@ package com.example.reviewerspring.service;
 import com.example.reviewerspring.domain.*;
 import com.example.reviewerspring.dto.GameDetailResponse;
 import com.example.reviewerspring.dto.GameFullInfoDto;
+import com.example.reviewerspring.dto.SimpleKeyword;
 import com.example.reviewerspring.repository.*;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+//import javax.management.Query;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,9 +26,10 @@ public class GameService {
     private final UserWishlistRepository wishlistRepository;
     private final UserTagPreferredRepository userTagPreferredRepository;
     private final ScorePlaytimeRepository scorePlaytimeRepository;
+    private final MongoTemplate mongoTemplate;
 
     //repository에서 데이터 받아와서 api에 전달
-    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository) {
+    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository, MongoTemplate mongoTemplate) {
         this.gameRepository = gameRepository;
         this.gameScoreRepository = gameScoreRepository;
         this.playtimeRepository = playtimeRepository;
@@ -32,6 +38,7 @@ public class GameService {
         this.wishlistRepository = wishlistRepository;
         this.userTagPreferredRepository = userTagPreferredRepository;
         this.scorePlaytimeRepository = scorePlaytimeRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public GameFullInfoDto getFullGameInfo(Integer appid) {
@@ -270,5 +277,60 @@ public class GameService {
             System.out.println("[플레이타임 저장] appid=" + appid + ", avg=" + avgPlaytimeInt + ", top10per=" + top10perInt);
         }
     }
+
+    @Scheduled(fixedRate = 3600000)
+    public void updateGameKeywordsScheduled() {
+        updateGameKeywords();
+    }
+
+    // GameService.java 에서 updateGameKeywords 메서드
+    public void updateGameKeywords() {
+        List<Keywords> allKeywords = mongoTemplate.findAll(Keywords.class, "keywords");
+
+        Map<Integer, List<Keywords>> posiMap = new HashMap<>();
+        Map<Integer, List<Keywords>> negaMap = new HashMap<>();
+
+        for (Keywords k : allKeywords) {
+            int appId = k.getApp_id();
+            if ("positive".equalsIgnoreCase(k.getSentiment())) {
+                posiMap.computeIfAbsent(appId, id -> new ArrayList<>()).add(k);
+            } else if ("negative".equalsIgnoreCase(k.getSentiment())) {
+                negaMap.computeIfAbsent(appId, id -> new ArrayList<>()).add(k);
+            }
+        }
+
+        Set<Integer> allAppIds = new HashSet<>();
+        allAppIds.addAll(posiMap.keySet());
+        allAppIds.addAll(negaMap.keySet());
+
+        for (Integer appId : allAppIds) {
+            if (appId == null) continue;
+
+            Query query = new Query();
+            query.addCriteria(Criteria.where("appid").is(appId));
+
+            GameScore gameScore = mongoTemplate.findOne(query, GameScore.class);
+
+            if (gameScore != null) {
+                List<SimpleKeyword> posiList = posiMap.getOrDefault(appId, new ArrayList<>())
+                        .stream()
+                        .map(k -> new SimpleKeyword(k.getKeyword(), k.getCount()))
+                        .collect(Collectors.toList());
+
+                List<SimpleKeyword> negaList = negaMap.getOrDefault(appId, new ArrayList<>())
+                        .stream()
+                        .map(k -> new SimpleKeyword(k.getKeyword(), k.getCount()))
+                        .collect(Collectors.toList());
+
+                gameScore.setPosiWord(posiList);
+                gameScore.setNegaWord(negaList);
+                mongoTemplate.save(gameScore);
+            }
+        }
+
+
+        System.out.println("⏰ 1시간마다 자동으로 키워드 업데이트 완료!");
+    }
+
 
 }

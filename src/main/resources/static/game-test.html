@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>게임 정보 테스트</title>
     <style>
         body {
@@ -18,18 +18,36 @@
         img {
             max-width: 300px;
         }
+        .wishlist-game {
+            margin-bottom: 10px;
+        }
+        .wishlist-game img {
+            max-width: 80px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
 
 <h2>게임 상세 정보 테스트</h2>
 <label for="appid">AppID 입력:</label>
-<input type="number" id="appid" placeholder="예: 730">
+<input type="number" id="appid" placeholder="예: 730" />
 <button onclick="getGameDetail()">불러오기</button>
 
 <div class="result" id="result"></div>
 
+<hr />
+
+<h2>찜 목록 테스트</h2>
+<label for="userIdWishlist">User ID 입력:</label>
+<input type="text" id="userIdWishlist" placeholder="예: user123" />
+<button onclick="getWishlist()">찜 목록 불러오기</button>
+
+<div class="result" id="wishlistResult"></div>
+
 <script>
+    // 게임 상세 정보 불러오기 + 찜 버튼 생성
     async function getGameDetail() {
         const appid = document.getElementById("appid").value;
         const resultDiv = document.getElementById("result");
@@ -43,13 +61,19 @@
 
             const data = await response.json();
 
+            // 찜 버튼과 유저 아이디 입력창도 함께 넣기
             resultDiv.innerHTML = `
                 <h3>${data.title}</h3>
                 <img src="${data.image}" alt="게임 이미지">
                 <p><strong>설명:</strong> ${data.description}</p>
                 <p><strong>장르:</strong> ${data.genres.join(', ')}</p>
-                <p><strong>긍정 키워드:</strong> ${data.posiWord}</p>
-                <p><strong>부정 키워드:</strong> ${data.negaWord}</p>
+                <p><strong>긍정 키워드:</strong> ${
+                                Array.isArray(data.posiWord) ? data.posiWord.map(k => k.keyword).join(', ') : ''
+                            }</p>
+                <p><strong>부정 키워드:</strong> ${
+                                Array.isArray(data.negaWord) ? data.negaWord.map(k => k.keyword).join(', ') : ''
+                            }</p>
+
                 <h4>점수 트렌드</h4>
                 <ul>
                     <li>점수: ${data.scoreTrend.average}</li>
@@ -63,9 +87,101 @@
                         <li>${g.title} (AppID: ${g.appid}) <br><img src="${g.image}" width="100"></li>
                     `).join('')}
                 </ul>
+                <hr>
+                <label for="userId">User ID 입력 (찜 추가/삭제):</label><br>
+                <input type="text" id="userId" placeholder="예: user123" />
+                <button onclick="toggleWishlist('${appid}')">찜 추가/삭제</button>
             `;
         } catch (error) {
             resultDiv.innerHTML = `<span style="color: red;">${error.message}</span>`;
+        }
+    }
+
+    // 찜 목록 불러오기
+    async function getWishlist() {
+        const userId = document.getElementById("userId").value.trim();
+        const wishlistDiv = document.getElementById("wishlistResult");
+
+        if (!userId) {
+            wishlistDiv.innerHTML = `<span style="color: red;">User ID를 입력하세요.</span>`;
+            return;
+        }
+
+        wishlistDiv.innerHTML = "불러오는 중...";
+
+        try {
+            const response = await fetch(`/wishlist?userId=${encodeURIComponent(userId)}`);
+            if (!response.ok) {
+                throw new Error("찜 목록을 가져오지 못했습니다.");
+            }
+
+            const data = await response.json(); // ex: [{ gameId: "730" }, { gameId: "440" }]
+
+            if (!data || !data.length) {
+                wishlistDiv.innerHTML = "찜한 게임이 없습니다.";
+                return;
+            }
+
+            wishlistDiv.innerHTML = ""; // 초기화
+
+            // 각 게임 정보 개별 요청
+            for (const item of data) {
+                const gameId = item.gameId;
+
+                try {
+                    const gameResponse = await fetch(`/api/games/${gameId}`);
+                    if (!gameResponse.ok) throw new Error();
+
+                    const gameData = await gameResponse.json();
+
+                    wishlistDiv.innerHTML += `
+                    <div class="wishlist-game">
+                        <img src="${gameData.image}" alt="${gameData.title}" />
+                        <strong>${gameData.title}</strong> (AppID: ${gameId})
+                    </div>
+                `;
+                } catch {
+                    wishlistDiv.innerHTML += `
+                    <div class="wishlist-game">
+                        <strong>게임 정보 없음</strong> (AppID: ${gameId})
+                    </div>
+                `;
+                }
+            }
+
+        } catch (error) {
+            console.error(error);
+            wishlistDiv.innerHTML = `<span style="color: red;">${error.message}</span>`;
+        }
+    }
+
+
+    // 찜 추가/삭제 토글 함수
+    async function toggleWishlist(appid) {
+        const userIdInput = document.getElementById("userId");
+        if (!userIdInput) {
+            alert("User ID 입력창이 없습니다.");
+            return;
+        }
+        const userId = userIdInput.value.trim();
+        if (!userId) {
+            alert("User ID를 입력하세요.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/wishlist?userId=${encodeURIComponent(userId)}&gameId=${encodeURIComponent(appid)}`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                throw new Error("찜 추가/삭제 요청 실패");
+            }
+
+            const resultText = await response.text();
+            alert(resultText);
+        } catch (error) {
+            alert(`오류 발생: ${error.message}`);
         }
     }
 </script>

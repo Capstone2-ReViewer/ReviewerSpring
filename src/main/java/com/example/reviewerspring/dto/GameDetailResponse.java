@@ -15,8 +15,8 @@ public class GameDetailResponse {
     private String image;
     private String description;
     private List<String> genres;
-    private String posiWord;
-    private String negaWord;
+    private List<SimpleKeyword> posiWord;
+    private List<SimpleKeyword> negaWord;
 
     private ScoreTrend scoreTrend;
 
