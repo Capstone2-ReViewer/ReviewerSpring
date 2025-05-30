@@ -4,6 +4,7 @@ import com.example.reviewerspring.domain.*;
 import com.example.reviewerspring.dto.GameDetailResponse;
 import com.example.reviewerspring.dto.GameFullInfoDto;
 import com.example.reviewerspring.repository.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -19,8 +20,10 @@ public class GameService {
     private final GameTagRepository gameTagRepository;
     private final UserWishlistRepository wishlistRepository;
     private final UserTagPreferredRepository userTagPreferredRepository;
+    private final ScorePlaytimeRepository scorePlaytimeRepository;
+
     //repository에서 데이터 받아와서 api에 전달
-    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository) {
+    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository) {
         this.gameRepository = gameRepository;
         this.gameScoreRepository = gameScoreRepository;
         this.playtimeRepository = playtimeRepository;
@@ -28,6 +31,7 @@ public class GameService {
         this.gameTagRepository = gameTagRepository;
         this.wishlistRepository = wishlistRepository;
         this.userTagPreferredRepository = userTagPreferredRepository;
+        this.scorePlaytimeRepository = scorePlaytimeRepository;
     }
 
     public GameFullInfoDto getFullGameInfo(Integer appid) {
@@ -186,6 +190,85 @@ public class GameService {
                     return map;
                 })
                 .toList();
+    }
+
+    @Scheduled(fixedRate = 3600000) // 1시간마다 실행 (1000ms * 60 * 60)
+    public void updateGameScoresFromPlaytimeHourly() {
+        System.out.println("[스케줄링] 게임 점수 업데이트 시작");
+        updateGameScoresFromPlaytime();
+        System.out.println("[스케줄링] 게임 점수 업데이트 완료");
+    }
+
+    public void updateGameScoresFromPlaytime() {
+        Map<Integer, List<ScorePlaytime>> grouped = scorePlaytimeRepository.findAll()
+                .stream()
+                .filter(s -> s.getAppid() != null)
+                .collect(Collectors.groupingBy(ScorePlaytime::getAppid));
+
+        for (Map.Entry<Integer, List<ScorePlaytime>> entry : grouped.entrySet()) {
+            Integer appid = entry.getKey();
+            List<ScorePlaytime> scoreList = entry.getValue();
+
+            double averageScore = scoreList.stream()
+                    .mapToDouble(ScorePlaytime::getFinal_score)
+                    .average()
+                    .orElse(0.0);
+            averageScore = Math.round(averageScore * 100) / 100.0;
+
+            // year_month 별 평균 점수 Map (정렬된 TreeMap)
+            Map<String, Double> avgByMonth = scoreList.stream()
+                    .collect(Collectors.groupingBy(
+                            ScorePlaytime::getYear_month,
+                            TreeMap::new,
+                            Collectors.averagingDouble(ScorePlaytime::getFinal_score)
+                    ));
+
+            // ScoreByDate 리스트 생성
+            List<ScoreByDate> scoreByDateList = avgByMonth.entrySet()
+                    .stream()
+                    .map(e -> new ScoreByDate(e.getKey(), Math.round(e.getValue() * 100) / 100.0))
+                    .toList();
+
+            // 플레이타임 평균 계산
+            double averagePlaytime = scoreList.stream()
+                    .mapToInt(ScorePlaytime::getPlaytime_forever)
+                    .average()
+                    .orElse(0.0);
+            int avgPlaytimeInt = (int) Math.round(averagePlaytime);
+
+            // 상위 10퍼센트 플레이타임 계산
+            List<Integer> playtimes = scoreList.stream()
+                    .map(ScorePlaytime::getPlaytime_forever)
+                    .sorted(Comparator.reverseOrder())
+                    .collect(Collectors.toList());
+
+            int top10Count = (int) Math.ceil(playtimes.size() * 0.1);
+            top10Count = Math.max(top10Count, 1);
+            List<Integer> top10Playtimes = playtimes.subList(0, top10Count);
+
+            double top10Avg = top10Playtimes.stream()
+                    .mapToInt(Integer::intValue)
+                    .average()
+                    .orElse(0.0);
+            int top10perInt = (int) Math.round(top10Avg);
+
+            // game_score 업데이트
+            GameScore gameScore = gameScoreRepository.findByAppid(appid).orElse(new GameScore());
+            gameScore.setAppid(appid);
+            gameScore.setScore(averageScore);
+            gameScore.setScorebydate(scoreByDateList);
+            gameScoreRepository.save(gameScore);
+
+            // playtime 업데이트
+            Playtime playtime = playtimeRepository.findByAppid(appid).orElse(new Playtime());
+            playtime.setAppid(appid);
+            playtime.setAvg(avgPlaytimeInt);
+            playtime.setTop10per(top10perInt);
+            playtimeRepository.save(playtime);
+
+            System.out.println("[점수 저장] appid=" + appid + ", score=" + averageScore + ", scorebydate=" + scoreByDateList);
+            System.out.println("[플레이타임 저장] appid=" + appid + ", avg=" + avgPlaytimeInt + ", top10per=" + top10perInt);
+        }
     }
 
 }

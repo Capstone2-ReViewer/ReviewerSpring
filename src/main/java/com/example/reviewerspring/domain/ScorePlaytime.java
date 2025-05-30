@@ -4,20 +4,17 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.List;
-
+@Document(collection = "score_playtime")
 @Getter @Setter
-@Document(collection = "game_score")
-public class GameScore {
+public class ScorePlaytime {
     @Id
     private String id;
 
+    @Field("app_id")
     private Integer appid;
-    private double score;
-    private List<ScoreByDate> scorebydate;
-
-    private String posiWord;
-    private String negaWord;
+    private String year_month;
+    private double final_score;
+    private Integer playtime_forever;
 }
-

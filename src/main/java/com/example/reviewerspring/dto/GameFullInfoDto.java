@@ -1,6 +1,7 @@
 package com.example.reviewerspring.dto;
 
 import com.example.reviewerspring.domain.GameTag;
+import com.example.reviewerspring.domain.ScoreByDate;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,7 +25,7 @@ public class GameFullInfoDto {
     private Integer discount;
 
     private Double score;
-    private Double scoreByDate;
+    private List<ScoreByDate> scoreByDate;
     private String posiWord;
     private String negaWord;
 
