@@ -101,11 +101,11 @@ public class GameService {
                 .toList();
 
         List<GameDetailResponse.SimilarGameDto> similarDtos = similar.stream().map(g ->
-                new GameDetailResponse.SimilarGameDto(g.getGame_name(), g.getImage(), String.valueOf(g.getAppid()))
+                new GameDetailResponse.SimilarGameDto(g.getName(), g.getImage(), String.valueOf(g.getAppid()))
         ).toList();
 
         return new GameDetailResponse(
-                game.getGame_name(),
+                game.getName(),
                 game.getImage(),
                 game.getDescription(),
                 game.getGenres(),
@@ -193,7 +193,7 @@ public class GameService {
                 .map(game -> {
                     Map<String, Object> map = new LinkedHashMap<>();
                     map.put("appid", game.getAppid());
-                    map.put("game_name", game.getGame_name());
+                    map.put("name", game.getName());
                     return map;
                 })
                 .toList();
