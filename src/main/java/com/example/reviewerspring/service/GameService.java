@@ -167,16 +167,19 @@ public class GameService {
 
     // 유저 선호 태그 기반 게임 순위
     public List<Game> getTopRankedGamesByUserTag(String userId) {
-        List<Integer> preferredTagIds = userTagPreferredRepository.findByUserId(userId).stream()
-                .map(UserTagPreferred::getTagId)
+        // 유저의 선호 태그 이름 목록 (tagName)
+        List<String> preferredTagNames = userTagPreferredRepository.findByUserId(userId).stream()
+                .filter(UserTagPreferred::isPreferred)
+                .map(UserTagPreferred::getTagName)
+                .map(String::toLowerCase)
                 .toList();
 
-        List<Game> allGames = gameRepository.findAll();
-
-        return allGames.stream()
+        return gameRepository.findAll().stream()
                 .filter(game -> {
-                    List<GameTag> tags = gameTagRepository.findByGamePk(game.getAppid());
-                    return tags.stream().anyMatch(tag -> preferredTagIds.contains(tag.getTagPk()));
+                    if (game.getGenres() == null) return false;
+                    return game.getGenres().stream()
+                            .map(String::toLowerCase)
+                            .anyMatch(preferredTagNames::contains);
                 })
                 .map(game -> {
                     GameScore score = gameScoreRepository.findByAppid(game.getAppid()).orElse(null);
