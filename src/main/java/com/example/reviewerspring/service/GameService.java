@@ -140,8 +140,14 @@ public class GameService {
     // 찜 목록
     public List<Game> getWishListGames(String userId) {
         List<UserWishlist> wishlists = wishlistRepository.findByUserId(userId);
-        List<String> gameIds = wishlists.stream().map(UserWishlist::getGameId).toList();
-        return gameRepository.findByIdIn(gameIds);
+
+        // gameId는 String이니까 Integer로 변환
+        List<Integer> appIds = wishlists.stream()
+                .map(UserWishlist::getGameId)
+                .map(Integer::parseInt)
+                .toList();
+
+        return gameRepository.findByAppidIn(appIds);
     }
 
     // 전체 게임 순위 출력 (점수 기준 내림차순)

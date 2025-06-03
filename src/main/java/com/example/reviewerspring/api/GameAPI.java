@@ -26,8 +26,8 @@ public class GameAPI {
     }
 
     // 게임 찜 목록 보기
-    @GetMapping("/wishlist")
-    public ResponseEntity<List<Game>> getWishlist(@RequestParam String userId) {
+    @GetMapping("/wishlist/{userId}")
+    public ResponseEntity<List<Game>> getWishlist(@PathVariable String userId) {
         List<Game> wishlist = gameService.getWishListGames(userId);
         return ResponseEntity.ok(wishlist);
     }

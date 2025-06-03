@@ -89,7 +89,7 @@
                 </ul>
                 <hr>
                 <label for="userId">User ID 입력 (찜 추가/삭제):</label><br>
-                <input type="text" id="userId" placeholder="예: user123" />
+                <input type="text" id="userIdWishlist" placeholder="예: user123" />
                 <button onclick="toggleWishlist('${appid}')">찜 추가/삭제</button>
             `;
         } catch (error) {
@@ -98,61 +98,42 @@
     }
 
     // 찜 목록 불러오기
-    async function getWishlist() {
-        const userId = document.getElementById("userId").value.trim();
-        const wishlistDiv = document.getElementById("wishlistResult");
+    function getWishlist() {
+        // const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        //
+        // if (!currentUser || !currentUser.id) {
+        //     alert("로그인이 필요합니다.");
+        //     return;
+        // }
 
-        if (!userId) {
-            wishlistDiv.innerHTML = `<span style="color: red;">User ID를 입력하세요.</span>`;
-            return;
-        }
+        const userId = document.getElementById("userIdWishlist").value.trim();
 
-        wishlistDiv.innerHTML = "불러오는 중...";
-
-        try {
-            const response = await fetch(`/wishlist?userId=${encodeURIComponent(userId)}`);
-            if (!response.ok) {
-                throw new Error("찜 목록을 가져오지 못했습니다.");
-            }
-
-            const data = await response.json(); // ex: [{ gameId: "730" }, { gameId: "440" }]
-
-            if (!data || !data.length) {
-                wishlistDiv.innerHTML = "찜한 게임이 없습니다.";
-                return;
-            }
-
-            wishlistDiv.innerHTML = ""; // 초기화
-
-            // 각 게임 정보 개별 요청
-            for (const item of data) {
-                const gameId = item.gameId;
-
-                try {
-                    const gameResponse = await fetch(`/api/games/${gameId}`);
-                    if (!gameResponse.ok) throw new Error();
-
-                    const gameData = await gameResponse.json();
-
-                    wishlistDiv.innerHTML += `
-                    <div class="wishlist-game">
-                        <img src="${gameData.image}" alt="${gameData.title}" />
-                        <strong>${gameData.title}</strong> (AppID: ${gameId})
-                    </div>
-                `;
-                } catch {
-                    wishlistDiv.innerHTML += `
-                    <div class="wishlist-game">
-                        <strong>게임 정보 없음</strong> (AppID: ${gameId})
-                    </div>
-                `;
+        fetch(`http://localhost:8080/wishlist/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("서버 오류");
                 }
-            }
+                return response.json();
+            })
+            .then(data => {
+                const wishlistEl = document.getElementById("wishlistResult");
+                wishlistEl.innerHTML = "";
 
-        } catch (error) {
-            console.error(error);
-            wishlistDiv.innerHTML = `<span style="color: red;">${error.message}</span>`;
-        }
+                if (data.length === 0) {
+                    wishlistEl.innerHTML = "<li>찜 목록이 비어 있습니다.</li>";
+                    return;
+                }
+
+                data.forEach(game => {
+                    const li = document.createElement("li");
+                    li.textContent = `게임 이름: ${game.name || game.title || "제목 없음"}`;
+                    wishlistEl.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error("찜 목록 조회 오류:", error);
+                alert("찜 목록을 불러오는 데 실패했습니다.");
+            });
     }
 
 
