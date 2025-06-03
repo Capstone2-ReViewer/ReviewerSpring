@@ -27,9 +27,10 @@ public class GameService {
     private final UserTagPreferredRepository userTagPreferredRepository;
     private final ScorePlaytimeRepository scorePlaytimeRepository;
     private final MongoTemplate mongoTemplate;
+    private final UserRepository userRepository;
 
     //repository에서 데이터 받아와서 api에 전달
-    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository, MongoTemplate mongoTemplate) {
+    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository, MongoTemplate mongoTemplate, UserRepository userRepository) {
         this.gameRepository = gameRepository;
         this.gameScoreRepository = gameScoreRepository;
         this.playtimeRepository = playtimeRepository;
@@ -39,6 +40,7 @@ public class GameService {
         this.userTagPreferredRepository = userTagPreferredRepository;
         this.scorePlaytimeRepository = scorePlaytimeRepository;
         this.mongoTemplate = mongoTemplate;
+        this.userRepository = userRepository;
     }
 
     public GameFullInfoDto getFullGameInfo(Integer appid) {
@@ -167,26 +169,35 @@ public class GameService {
 
     // 유저 선호 태그 기반 게임 순위
     public List<Game> getTopRankedGamesByUserTag(String userId) {
-        // 유저의 선호 태그 이름 목록 (tagName)
-        List<String> preferredTagNames = userTagPreferredRepository.findByUserId(userId).stream()
+        // 1. userId로 User 문서 조회
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("해당 userId의 사용자가 없습니다: " + userId));
+
+        String mongoUserId = user.getId(); // User 컬렉션의 ObjectId
+
+        // 2. mongoUserId로 UserTagPreferred 조회
+        List<String> preferredTagNames = userTagPreferredRepository.findByUserId(mongoUserId).stream()
                 .filter(UserTagPreferred::isPreferred)
                 .map(UserTagPreferred::getTagName)
+                .map(String::trim)
                 .map(String::toLowerCase)
                 .toList();
 
+        // 3. 선호 태그와 장르 매칭해서 게임 필터링 및 점수로 정렬
         return gameRepository.findAll().stream()
                 .filter(game -> {
                     if (game.getGenres() == null) return false;
                     return game.getGenres().stream()
+                            .map(String::trim)
                             .map(String::toLowerCase)
                             .anyMatch(preferredTagNames::contains);
                 })
                 .map(game -> {
                     GameScore score = gameScoreRepository.findByAppid(game.getAppid()).orElse(null);
                     double s = score != null ? score.getScore() : 0.0;
-                    return new Object[] { game, s };
+                    return new Object[]{game, s};
                 })
-                .sorted((a, b) -> Double.compare((double)b[1], (double)a[1]))
+                .sorted((a, b) -> Double.compare((double) b[1], (double) a[1]))
                 .map(pair -> (Game) pair[0])
                 .collect(Collectors.toList());
     }

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>유저 추천 게임 순위</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #resultTable {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<h2>🎮 유저 추천 게임 순위</h2>
+<label for="userIdInput">유저 ID 입력:</label>
+<input type="text" id="userIdInput" placeholder="예: 683ee6667acedc091b259ed3" />
+<button onclick="fetchRanking()">조회</button>
+
+<table id="resultTable">
+    <thead>
+    <tr>
+        <th>순위</th>
+        <th>게임 이름</th>
+        <th>장르</th>
+        <th>설명</th>
+    </tr>
+    </thead>
+    <tbody id="resultBody"></tbody>
+</table>
+
+<p id="message"></p>
+
+<script>
+    function fetchRanking() {
+        const userId = document.getElementById('userIdInput').value.trim();
+        const message = document.getElementById('message');
+        const resultTable = document.getElementById('resultTable');
+        const resultBody = document.getElementById('resultBody');
+
+        message.textContent = '';
+        resultTable.style.display = 'none';
+        resultBody.innerHTML = '';
+
+        if (!userId) {
+            message.textContent = '⚠️ 유저 ID를 입력해주세요.';
+            return;
+        }
+
+        fetch(`/ranking/user-tag/${userId}`)
+            .then(response => {
+                if (response.status === 204) {
+                    throw new Error('추천 결과가 없습니다.');
+                }
+                if (!response.ok) {
+                    throw new Error('서버 오류 발생');
+                }
+                return response.json();
+            })
+            .then(games => {
+                if (games.length === 0) {
+                    message.textContent = '추천 결과가 없습니다.';
+                    return;
+                }
+
+                games.forEach((game, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${game.name || game.game_name}</td>
+              <td>${(game.genres || []).join(', ')}</td>
+              <td>${game.description || '-'}</td>
+            `;
+                    resultBody.appendChild(row);
+                });
+
+                resultTable.style.display = 'table';
+            })
+            .catch(error => {
+                message.textContent = `❌ ${error.message}`;
+            });
+    }
+</script>
+</body>
+</html>
