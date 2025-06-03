@@ -114,7 +114,7 @@ public class GameService {
                 new GameDetailResponse.ScoreTrend(
                         score != null ? score.getScore() : null,
                         playtime != null ? playtime.getTop10per() : null,
-                        median,
+                        playtime != null ? playtime.getAvg() : null,
                         stdDev
                 ),
                 similarDtos,

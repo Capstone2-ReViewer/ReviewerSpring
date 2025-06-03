@@ -32,6 +32,7 @@ public class GameFullInfoDto {
 
     private Integer avgPlaytime;
     private Integer top10per;
+    private Integer avg;
 
     private LocalDateTime updateDate;
 

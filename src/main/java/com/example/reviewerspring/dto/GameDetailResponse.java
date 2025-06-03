@@ -31,7 +31,7 @@ public class GameDetailResponse {
     public static class ScoreTrend {
         private Double average;
         private Integer top10Percent;
-        private Double median;
+        private Integer avg;
         private Double stdDev;
     }
 
