@@ -1,63 +1,98 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>회원가입</title>
 </head>
 <body>
-<h2>회원가입</h2>
-<form id="signup-form">
-    <input type="text" name="userId" placeholder="아이디" required /><br />
-    <input type="password" name="password" placeholder="비밀번호" required /><br />
-    <input type="password" name="passwordCheck" placeholder="비밀번호 확인" required /><br />
-    <input type="text" name="name" placeholder="이름" required /><br />
-    <input type="text" name="nickname" placeholder="닉네임" required /><br />
-    <input type="number" name="age" placeholder="나이" required min="1" /><br />
-    <select name="gender" required>
-        <option value="">성별 선택</option>
+<h1>회원가입</h1>
+<form id="signupForm">
+    <input type="text" name="userId" placeholder="아이디"><br>
+    <input type="password" name="password" placeholder="비밀번호"><br>
+    <input type="password" name="passwordCheck" placeholder="비밀번호 확인"><br>
+    <input type="text" name="name" placeholder="이름"><br>
+    <input type="text" name="nickname" placeholder="닉네임"><br>
+    <input type="number" name="age" placeholder="나이"><br>
+    <select name="gender">
         <option value="남자">남자</option>
         <option value="여자">여자</option>
-    </select><br />
-    <input type="text" name="preferredTags" placeholder="선호 태그 (쉼표로 구분된 tagId들)" /><br />
-    <input type="text" name="dislikedTags" placeholder="비선호 태그 (쉼표로 구분된 tagId들)" /><br />
+    </select><br><br>
+
+    <h3>선호 장르</h3>
+    <div id="preferred-tags">
+        <label><input type="checkbox" value="1" data-name="액션"> 액션</label>
+        <label><input type="checkbox" value="2" data-name="어드벤처"> 어드벤처</label>
+        <label><input type="checkbox" value="3" data-name="RPG"> RPG</label>
+        <label><input type="checkbox" value="4" data-name="시뮬레이션"> 시뮬레이션</label>
+        <!-- 필요하면 더 추가 -->
+    </div>
+
+    <h3>비선호 장르</h3>
+    <div id="disliked-tags">
+        <label><input type="checkbox" value="5" data-name="스포츠"> 스포츠</label>
+        <label><input type="checkbox" value="6" data-name="전략"> 전략</label>
+        <label><input type="checkbox" value="7" data-name="캐주얼"> 캐주얼</label>
+        <label><input type="checkbox" value="8" data-name="공포"> 공포</label>
+        <!-- 필요하면 더 추가 -->
+    </div>
+
     <button type="submit">회원가입</button>
 </form>
 
 <script>
-    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    document.getElementById('signupForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const form = document.getElementById('signup-form');
 
-        const data = {
-            userId: form.userId.value.trim(),
-            password: form.password.value,
-            passwordCheck: form.passwordCheck.value,
-            name: form.name.value.trim(),
-            nickname: form.nickname.value.trim(),
-            age: parseInt(form.age.value),
-            gender: form.gender.value,
-            preferredTags: form.preferredTags.value.trim(),
-            dislikedTags: form.dislikedTags.value.trim()
+        const form = e.target;
+        const formData = new FormData(form);
+
+        const preferredTags = [];
+        document.querySelectorAll('#preferred-tags input:checked').forEach(cb => {
+            preferredTags.push({
+                tagId: parseInt(cb.value),
+                tagName: cb.dataset.name
+            });
+        });
+
+        const dislikedTags = [];
+        document.querySelectorAll('#disliked-tags input:checked').forEach(cb => {
+            dislikedTags.push({
+                tagId: parseInt(cb.value),
+                tagName: cb.dataset.name
+            });
+        });
+
+        const requestBody = {
+            userId: formData.get('userId'),
+            password: formData.get('password'),
+            passwordCheck: formData.get('passwordCheck'),
+            name: formData.get('name'),
+            nickname: formData.get('nickname'),
+            age: parseInt(formData.get('age')),
+            gender: formData.get('gender'),
+            preferredTags: preferredTags,
+            dislikedTags: dislikedTags
         };
 
         try {
-            const res = await fetch('/api/user/signup', {
+            const response = await fetch('http://localhost:8080/api/user/signup', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
             });
 
-            if (res.ok) {
-                alert('회원가입이 완료되었습니다!');
-                form.reset();
-                window.location.href = '/index.html'; // 로그인 페이지 등으로 이동하도록 설정 가능
+            if (response.ok) {
+                alert('회원가입 성공!');
+                window.location.href = 'index.html';
             } else {
-                const errorText = await res.text();
-                alert('회원가입 실패: ' + errorText);
+                const err = await response.text();
+                alert('회원가입 실패: ' + err);
             }
         } catch (error) {
-            alert('서버와 통신 중 오류가 발생했습니다.');
             console.error(error);
+            alert('서버 오류');
         }
     });
 </script>
