@@ -117,7 +117,8 @@ public class GameService {
                         median,
                         stdDev
                 ),
-                similarDtos
+                similarDtos,
+                score != null ? score.getScorebydate() : null
         );
     }
 

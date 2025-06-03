@@ -1,5 +1,6 @@
 package com.example.reviewerspring.dto;
 
+import com.example.reviewerspring.domain.ScoreByDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class GameDetailResponse {
     private ScoreTrend scoreTrend;
 
     private List<SimilarGameDto> similarGames;
+    private List<ScoreByDate> scoreByDate;
 
     @Getter
     @Setter
