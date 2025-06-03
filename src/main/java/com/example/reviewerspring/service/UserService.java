@@ -194,7 +194,7 @@ public class UserService {
         // 관련 문서 먼저 삭제
         preferredRepository.deleteByUserId(user.getId());
         relateRepository.deleteByUserId(user.getId());
-        wishlistRepository.deleteByUserId(user.getId());
+        wishlistRepository.deleteByUserId(user.getUserId());
 
         // 유저 삭제
         userRepository.delete(user);
