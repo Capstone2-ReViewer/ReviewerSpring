@@ -19,12 +19,19 @@
             max-width: 300px;
         }
         .wishlist-game {
-            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f9f9f9;
         }
+
         .wishlist-game img {
-            max-width: 80px;
-            vertical-align: middle;
-            margin-right: 10px;
+            width: 80px;
+            height: auto;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -99,13 +106,6 @@
 
     // 찜 목록 불러오기
     function getWishlist() {
-        // const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-        //
-        // if (!currentUser || !currentUser.id) {
-        //     alert("로그인이 필요합니다.");
-        //     return;
-        // }
-
         const userId = document.getElementById("userIdWishlist").value.trim();
 
         fetch(`http://localhost:8080/wishlist/${userId}`)
@@ -120,14 +120,26 @@
                 wishlistEl.innerHTML = "";
 
                 if (data.length === 0) {
-                    wishlistEl.innerHTML = "<li>찜 목록이 비어 있습니다.</li>";
+                    wishlistEl.innerHTML = "<p>찜 목록이 비어 있습니다.</p>";
                     return;
                 }
 
                 data.forEach(game => {
-                    const li = document.createElement("li");
-                    li.textContent = `게임 점수: ${game.name || game.title || "제목 없음"}`;
-                    wishlistEl.appendChild(li);
+                    const gameDiv = document.createElement("div");
+                    gameDiv.classList.add("wishlist-game");
+
+                    gameDiv.innerHTML = `
+                    <img src="${game.image}" alt="${game.title}">
+                    <strong>${game.title}</strong><br>
+                    <p>게임 점수: ${game.score ?? '정보 없음'}</p>
+                    <p>리뷰 수: ${game.count ?? 0}</p>
+                    <p>긍정 키워드: ${Array.isArray(game.posiWord) ? game.posiWord.map(k => k.keyword).join(', ') : '없음'}</p>
+                    <p>부정 키워드: ${Array.isArray(game.negaWord) ? game.negaWord.map(k => k.keyword).join(', ') : '없음'}</p>
+                    <p>평균 플레이타임: ${game.avgPlaytime ?? '-'}분</p>
+                    <p>상위 10% 플레이타임: ${game.top10per ?? '-'}분</p>
+                `;
+
+                    wishlistEl.appendChild(gameDiv);
                 });
             })
             .catch(error => {

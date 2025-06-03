@@ -1,6 +1,7 @@
 package com.example.reviewerspring.api;
 
 import com.example.reviewerspring.domain.Game;
+import com.example.reviewerspring.dto.WishlistGameResponse;
 import com.example.reviewerspring.repository.GameRepository;
 import com.example.reviewerspring.service.GameService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,8 +28,8 @@ public class GameAPI {
 
     // 게임 찜 목록 보기
     @GetMapping("/wishlist/{userId}")
-    public ResponseEntity<List<Game>> getWishlist(@PathVariable String userId) {
-        List<Game> wishlist = gameService.getWishListGames(userId);
+    public ResponseEntity<List<WishlistGameResponse>> getWishlist(@PathVariable String userId) {
+        List<WishlistGameResponse> wishlist = gameService.getWishListGames(userId);
         return ResponseEntity.ok(wishlist);
     }
 
@@ -48,8 +49,8 @@ public class GameAPI {
 
     // 찜 게임 간 비교 기능 (게임 정보 간 차이 등 비교용)
     @GetMapping("/wishlist/compare/{userId}")
-    public ResponseEntity<List<Game>> compareWishlist(@PathVariable String userId) {
-        List<Game> compared = gameService.compareWishListGames(userId);
+    public ResponseEntity<List<WishlistGameResponse>> compareWishlist(@PathVariable String userId) {
+        List<WishlistGameResponse> compared = gameService.compareWishListGames(userId);
         return ResponseEntity.ok(compared);
     }
 

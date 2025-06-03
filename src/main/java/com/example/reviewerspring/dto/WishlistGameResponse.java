@@ -13,8 +13,10 @@ public class WishlistGameResponse {
     private String image;
 
     private Double score;
+    private Integer count;
     private List<SimpleKeyword> posiWord;
     private List<SimpleKeyword> negaWord;
 
     private Integer avgPlaytime;
+    private Integer top10per;
 }

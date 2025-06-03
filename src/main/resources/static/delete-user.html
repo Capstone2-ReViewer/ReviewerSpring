@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>회원 탈퇴</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 300px;
+    }
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🗑️ 회원 탈퇴 테스트</h2>
+
+<label for="userIdInput">유저 ID 입력:</label><br />
+<input type="text" id="userIdInput" placeholder="예: testuser123" /><br />
+<button onclick="deleteUser()">회원 탈퇴</button>
+
+<p id="message"></p>
+
+<script>
+  function deleteUser() {
+    const userId = document.getElementById('userIdInput').value.trim();
+    const message = document.getElementById('message');
+    message.textContent = '';
+
+    if (!userId) {
+      message.textContent = '⚠️ 유저 ID를 입력해주세요.';
+      return;
+    }
+
+    fetch(`api/user/delete?userId=${encodeURIComponent(userId)}`, {
+      method: 'DELETE'
+    })
+            .then(response => response.text().then(text => ({ status: response.status, text })))
+            .then(({ status, text }) => {
+              if (status === 200) {
+                message.textContent = `✅ ${text}`;
+                message.style.color = 'green';
+              } else {
+                message.textContent = `❌ ${text}`;
+                message.style.color = 'red';
+              }
+            })
+            .catch(error => {
+              message.textContent = `❌ 에러 발생: ${error.message}`;
+              message.style.color = 'red';
+            });
+  }
+</script>
+
+</body>
+</html>

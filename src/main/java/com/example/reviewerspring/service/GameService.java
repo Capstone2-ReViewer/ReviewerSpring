@@ -4,6 +4,7 @@ import com.example.reviewerspring.domain.*;
 import com.example.reviewerspring.dto.GameDetailResponse;
 import com.example.reviewerspring.dto.GameFullInfoDto;
 import com.example.reviewerspring.dto.SimpleKeyword;
+import com.example.reviewerspring.dto.WishlistGameResponse;
 import com.example.reviewerspring.repository.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -28,9 +29,10 @@ public class GameService {
     private final ScorePlaytimeRepository scorePlaytimeRepository;
     private final MongoTemplate mongoTemplate;
     private final UserRepository userRepository;
+    private final KeywordRepository keywordRepository;
 
     //repository에서 데이터 받아와서 api에 전달
-    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository, MongoTemplate mongoTemplate, UserRepository userRepository) {
+    public GameService(GameRepository gameRepository, GameScoreRepository gameScoreRepository, PlaytimeRepository playtimeRepository, UpdateRepository updateRepository, GameTagRepository gameTagRepository, UserWishlistRepository wishlistRepository, UserTagPreferredRepository userTagPreferredRepository, ScorePlaytimeRepository scorePlaytimeRepository, MongoTemplate mongoTemplate, UserRepository userRepository, KeywordRepository keywordRepository) {
         this.gameRepository = gameRepository;
         this.gameScoreRepository = gameScoreRepository;
         this.playtimeRepository = playtimeRepository;
@@ -41,6 +43,7 @@ public class GameService {
         this.scorePlaytimeRepository = scorePlaytimeRepository;
         this.mongoTemplate = mongoTemplate;
         this.userRepository = userRepository;
+        this.keywordRepository = keywordRepository;
     }
 
     public GameFullInfoDto getFullGameInfo(Integer appid) {
@@ -140,16 +143,54 @@ public class GameService {
     }
 
     // 찜 목록
-    public List<Game> getWishListGames(String userId) {
+    public List<WishlistGameResponse> getWishListGames(String userId) {
         List<UserWishlist> wishlists = wishlistRepository.findByUserId(userId);
-
-        // gameId는 String이니까 Integer로 변환
         List<Integer> appIds = wishlists.stream()
                 .map(UserWishlist::getGameId)
                 .map(Integer::parseInt)
                 .toList();
 
-        return gameRepository.findByAppidIn(appIds);
+        List<Game> games = gameRepository.findByAppidIn(appIds);
+        Map<Integer, GameScore> scoreMap = gameScoreRepository.findByAppidIn(appIds)
+                .stream().collect(Collectors.toMap(GameScore::getAppid, s -> s));
+        Map<Integer, Playtime> playtimeMap = playtimeRepository.findByAppidIn(appIds)
+                .stream().collect(Collectors.toMap(Playtime::getAppid, p -> p));
+
+        // 리뷰 수는 keywords에서 appid별 count 합산
+        Map<Integer, Integer> reviewCountMap = new HashMap<>();
+        for (Integer appid : appIds) {
+            List<Keywords> keywords = keywordRepository.findByAppId(appid);
+            int totalCount = keywords.stream().mapToInt(Keywords::getCount).sum();
+            reviewCountMap.put(appid, totalCount);
+        }
+
+        // 최종 결과 조합
+        List<WishlistGameResponse> responseList = new ArrayList<>();
+        for (Game game : games) {
+            WishlistGameResponse dto = new WishlistGameResponse();
+            dto.setAppid(game.getAppid());
+            dto.setTitle(game.getName());
+            dto.setImage(game.getImage());
+
+            GameScore scoreData = scoreMap.get(game.getAppid());
+            if (scoreData != null) {
+                dto.setScore(scoreData.getScore());
+                dto.setPosiWord(scoreData.getPosiWord());
+                dto.setNegaWord(scoreData.getNegaWord());
+            }
+
+            Playtime play = playtimeMap.get(game.getAppid());
+            if (play != null) {
+                dto.setAvgPlaytime(play.getAvg());
+                dto.setTop10per(play.getTop10per());
+            }
+
+            dto.setCount(reviewCountMap.getOrDefault(game.getAppid(), 0));
+
+            responseList.add(dto);
+        }
+
+        return responseList;
     }
 
     // 전체 게임 순위 출력 (점수 기준 내림차순)
@@ -203,7 +244,7 @@ public class GameService {
     }
 
     // 찜 게임 비교 (단순 리스트 반환)
-    public List<Game> compareWishListGames(String userId) {
+    public List<WishlistGameResponse> compareWishListGames(String userId) {
         return getWishListGames(userId);
     }
 
