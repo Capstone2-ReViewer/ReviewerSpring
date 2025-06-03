@@ -89,7 +89,7 @@
                 </ul>
                 <hr>
                 <label for="userId">User ID 입력 (찜 추가/삭제):</label><br>
-                <input type="text" id="userIdWishlist" placeholder="예: user123" />
+                <input type="text" id="userId" placeholder="예: user123" />
                 <button onclick="toggleWishlist('${appid}')">찜 추가/삭제</button>
             `;
         } catch (error) {
@@ -126,7 +126,7 @@
 
                 data.forEach(game => {
                     const li = document.createElement("li");
-                    li.textContent = `게임 이름: ${game.name || game.title || "제목 없음"}`;
+                    li.textContent = `게임 점수: ${game.name || game.title || "제목 없음"}`;
                     wishlistEl.appendChild(li);
                 });
             })

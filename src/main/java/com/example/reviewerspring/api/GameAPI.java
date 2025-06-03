@@ -40,15 +40,15 @@ public class GameAPI {
     }
 
     // 유저 선호 태그 기반 게임 순위
-    @GetMapping("/ranking/user-tag")
-    public ResponseEntity<List<Game>> getTopRankedGamesByUserTag(@RequestParam String userId) {
+    @GetMapping("/ranking/user-tag/{userId}")
+    public ResponseEntity<List<Game>> getTopRankedGamesByUserTag(@PathVariable String userId) {
         List<Game> personalizedRank = gameService.getTopRankedGamesByUserTag(userId);
         return ResponseEntity.ok(personalizedRank);
     }
 
     // 찜 게임 간 비교 기능 (게임 정보 간 차이 등 비교용)
-    @GetMapping("/wishlist/compare")
-    public ResponseEntity<List<Game>> compareWishlist(@RequestParam String userId) {
+    @GetMapping("/wishlist/compare/{userId}")
+    public ResponseEntity<List<Game>> compareWishlist(@PathVariable String userId) {
         List<Game> compared = gameService.compareWishListGames(userId);
         return ResponseEntity.ok(compared);
     }
