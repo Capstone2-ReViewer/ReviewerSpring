@@ -16,14 +16,14 @@ public class UserSignupRequest {
     private Integer age;
     private String gender;
 
-    private List<TagInfo> preferredTags;
-    private List<TagInfo> dislikedTags;
-
-    @Getter
-    @Setter
-    public static class TagInfo {
-        private Integer tagId;
-        private String tagName;
-    }
+    private String preferredTags;
+    private String dislikedTags;
+//
+//    @Getter
+//    @Setter
+//    public static class TagInfo {
+//        private Integer tagId;
+//        private String tagName;
+//    }
 }
 

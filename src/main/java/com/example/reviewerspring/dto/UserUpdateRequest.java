@@ -13,13 +13,13 @@ public class UserUpdateRequest {
     private String nickname;
     private Integer age;
     private String gender;
-    private List<TagInfo> preferredTags;
-    private List<TagInfo> dislikedTags;
+    private String preferredTags;
+    private String dislikedTags;
 
-    @Getter
-    @Setter
-    public static class TagInfo {
-        private Integer tagId;
-        private String tagName;
-    }
+//    @Getter
+//    @Setter
+//    public static class TagInfo {
+//        private Integer tagId;
+//        private String tagName;
+//    }
 }
